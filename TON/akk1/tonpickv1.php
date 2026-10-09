@@ -85,7 +85,20 @@ class F {
             return [substr($res, 0, $hs), $body, (int)$info["http_code"]];
         }
     }
+    
+        // Bot klassi ichiga qo'shiladigan yordamchi funksiya:
+        private function saveStatus($username, $balance, $api_bal, $next_time) {
+        $status = [
+            "username"  => $username,
+            "balance"   => $balance,
+            "api_bal"   => $api_bal,
+            "next_time" => $next_time
+        ];
+        // Har bir akkaunt o'z papkasida status.json hosil qilishi uchun
+        @file_put_contents(__DIR__ . "/status.json", json_encode($status, JSON_PRETTY_PRINT));
+    }
 
+    
     public function setCfg($key) {
         $c = file_exists($this->cfgFile) ? json_decode(file_get_contents($this->cfgFile), true) : [];
         if (!empty($c[$key])) return $c[$key];
@@ -305,6 +318,8 @@ class Bot extends F {
         Display::info("Username", $d["username"]);
         Display::info("Balance", $d["balance"] . " TON");
         Display::info("API Bal", $this->solver->balance());
+        $this->saveStatus($d["username"], $d["balance"] . " TON", $this->solver->balance(), "00:55:43");
+        
         Display::line();
         Display::title("AUTO HOURLY");
         $this->loop();

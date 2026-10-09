@@ -317,9 +317,8 @@ class Bot extends F {
         }
         Display::info("Username", $d["username"]);
         Display::info("Balance", $d["balance"] . " TON");
-        Display::info("API Bal", $this->solver->balance());
         $this->saveStatus($d["username"], $d["balance"] . " TON", $this->solver->balance(), "00:55:43");
-        
+        Display::info("API Bal", $this->solver->balance());
         Display::line();
         Display::title("AUTO HOURLY");
         $this->loop();
@@ -556,6 +555,7 @@ class Bot extends F {
                 $d = $this->dashboard();
                 Display::info("Balance", $d["balance"] . " TON");
                 Display::info("API Bal", $this->solver->balance());
+                $this->saveStatus($d["username"], $d["balance"] . " TON", $this->solver->balance(), "01:00:00");
                 Display::line();
                 $this->timer(3600);
                 continue;

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TonPick Bot Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+
+    <div class="max-w-4xl mx-auto p-4 sm:p-6">
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-center bg-slate-900 border border-slate-800 p-5 rounded-2xl mb-6 shadow-xl">
+            <div>
+                <h1 class="text-2xl font-black tracking-wider text-cyan-400 flex items-center gap-2">
+                    <i class="fa-solid fa-robot"></i> TONPICK BOT v5.0.0
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">Mode: Auto Hourly + Gemini | Site: tonpick.game</p>
+            </div>
+            <div class="mt-3 sm:mt-0 bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 text-xs font-mono text-emerald-400 flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                LIVE MONITORING
+            </div>
+        </header>
+
+        <!-- Accounts Grid -->
+        <div id="accounts-container" class="grid grid-gap-4 space-y-4">
+            <!-- Dinamik yuklanadi -->
+            <div class="text-center py-10 text-slate-500">Ma'lumotlar yuklanmoqda...</div>
+        </div>
+    </div>
+
+    <!-- Modal / Claim Popup -->
+    <div id="claimModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
+            <div class="text-emerald-400 text-4xl mb-3"><i class="fa-solid fa-circle-check"></i></div>
+            <h3 class="text-lg font-bold mb-1" id="modalTitle">You Claimed!</h3>
+            <p class="text-sm text-slate-400 mb-4" id="modalTime">Next Claim Time: 00:55:43</p>
+            <button onclick="closeModal()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2 rounded-xl transition">Yopish</button>
+        </div>
+    </div>
+
+    <script>
+        async function fetchAccounts() {
+            try {
+                let response = await fetch('data.php');
+                let data = await response.json();
+                let container = document.getElementById('accounts-container');
+                container.innerHTML = '';
+
+                if (data.length === 0) {
+                    container.innerHTML = `<div class="text-center py-10 text-slate-500">Hozircha akk qo'shilmagan (ton/ papkasini tekshiring).</div>`;
+                    return;
+                }
+
+                data.forEach(acc => {
+                    let card = `
+                    <div onclick="openModal('${acc.username}', '${acc.next_time}')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/50 transition-all rounded-2xl p-5 cursor-pointer shadow-lg relative overflow-hidden">
+                        <div class="absolute top-0 right-0 bg-slate-800 text-[10px] uppercase tracking-widest px-3 py-1 rounded-bl-xl text-slate-400 font-mono">${acc.folder}</div>
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-mono">
+                            <div class="space-y-1.5">
+                                <div class="text-slate-400 text-xs">Username</div>
+                                <div class="text-cyan-400 font-bold truncate">@${acc.username}</div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="text-slate-400 text-xs">Balance</div>
+                                <div class="text-emerald-400 font-bold">${acc.balance}</div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="text-slate-400 text-xs">API Balance</div>
+                                <div class="text-amber-400">${acc.api_bal}</div>
+                            </div>
+                            <div class="space-y-1.5">
+                                <div class="text-slate-400 text-xs">Next Claim</div>
+                                <div class="text-rose-400 flex items-center gap-1.5"><i class="fa-regular fa-clock"></i> ${acc.next_time}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                    container.innerHTML += card;
+                });
+            } catch (err) {
+                console.error("Xatolik:", err);
+            }
+        }
+
+        function openModal(username, time) {
+            document.getElementById('modalTitle').innerText = `@${username} - You Claimed!`;
+            document.getElementById('modalTime').innerText = `Next: ${time}`;
+            document.getElementById('claimModal').classList.remove('hidden');
+            document.getElementById('claimModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('claimModal').classList.add('hidden');
+            document.getElementById('claimModal').classList.remove('flex');
+        }
+
+        // Har 5 sekundda ma'lumotlarni yangilab turish
+        fetchAccounts();
+        setInterval(fetchAccounts, 5000);
+    </script>
+</body>
+</html>
+

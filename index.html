@@ -15,7 +15,7 @@
                 <h1 class="text-2xl font-black tracking-wider text-cyan-400 flex items-center gap-2">
                     <i class="fa-solid fa-robot"></i> TONPICK BOT v5.0.0
                 </h1>
-                <p class="text-xs text-slate-400 mt-1">Universal Multi-Currency Monitor</p>
+                <p class="text-xs text-slate-400 mt-1">Real-time Terminal Log Viewer</p>
             </div>
             <div class="mt-3 sm:mt-0 bg-slate-800 px-4 py-2 rounded-xl border border-slate-700 text-xs font-mono text-emerald-400 flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -23,22 +23,30 @@
             </div>
         </header>
 
+        <!-- Akkauntlar ro'yxati -->
         <div id="accounts-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="text-center col-span-2 py-10 text-slate-500">Ma'lumotlar yuklanmoqda...</div>
         </div>
     </div>
 
-    <!-- Modal Popup -->
-    <div id="claimModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
-            <div class="text-emerald-400 text-4xl mb-3"><i class="fa-solid fa-circle-check"></i></div>
-            <h3 class="text-lg font-bold mb-1" id="modalTitle">You Claimed!</h3>
-            <p class="text-sm text-slate-400 mb-4" id="modalTime">Next Claim Time: 00:55:43</p>
-            <button onclick="closeModal()" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2 rounded-xl transition">Yopish</button>
+    <!-- Log Modal Popup (Real-time terminal oynasi) -->
+    <div id="logModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full flex flex-col shadow-2xl max-h-[85vh]">
+            <div class="flex justify-between items-center p-4 border-b border-slate-800">
+                <h3 class="text-base font-bold text-cyan-400 font-mono" id="modalTitle">Terminal Logs</h3>
+                <button onclick="closeModal()" class="text-slate-400 hover:text-white text-lg px-2"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 font-mono text-xs text-emerald-400 bg-black/60 rounded-b-2xl">
+                <pre id="logContent" class="whitespace-pre-wrap">Loglar yuklanmoqda...</pre>
+            </div>
         </div>
     </div>
 
     <script>
+        let currentCurrency = '';
+        let currentFolder = '';
+        let logInterval = null;
+
         async function fetchAccounts() {
             try {
                 let response = await fetch('data.php');
@@ -47,23 +55,24 @@
                 container.innerHTML = '';
 
                 if (data.length === 0) {
-                    container.innerHTML = `<div class="text-center col-span-2 py-10 text-slate-500">Hozircha akk qo'shilmagan (ton/, doge/ papkalarini tekshiring).</div>`;
+                    container.innerHTML = `<div class="text-center col-span-2 py-10 text-slate-500">Hozircha akk qo'shilmagan. Papka va botlarni tekshiring.</div>`;
                     return;
                 }
 
                 data.forEach(acc => {
                     let card = `
-                    <div onclick="openModal('${acc.username}', '${acc.next_time}', '${acc.currency}')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/50 transition-all rounded-2xl p-5 cursor-pointer shadow-lg relative overflow-hidden">
+                    <div onclick="openModal('${acc.currency}', '${acc.folder}', '${acc.username}')" class="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-cyan-500/50 transition-all rounded-2xl p-5 cursor-pointer shadow-lg relative overflow-hidden">
                         <div class="flex justify-between items-center mb-3">
                             <span class="bg-cyan-950 text-cyan-400 border border-cyan-800 text-[10px] uppercase font-mono px-2.5 py-0.5 rounded-full">${acc.currency} / ${acc.folder}</span>
-                            <span class="text-xs text-emerald-400 font-mono flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> Active</span>
+                            <span class="text-xs text-emerald-400 font-mono flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Active</span>
                         </div>
                         <div class="space-y-2 font-mono text-sm">
+                            <div class="flex justify-between"><span class="text-slate-400">Akkaunt:</span> <span class="text-cyan-400 font-bold">${acc.folder}</span></div>
                             <div class="flex justify-between"><span class="text-slate-400">Username:</span> <span class="text-cyan-400 font-bold">@${acc.username}</span></div>
                             <div class="flex justify-between"><span class="text-slate-400">Balance:</span> <span class="text-emerald-400 font-bold">${acc.balance}</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">API Bal:</span> <span class="text-amber-400">${acc.api_bal}</span></div>
                             <div class="flex justify-between"><span class="text-slate-400">Next:</span> <span class="text-rose-400"><i class="fa-regular fa-clock"></i> ${acc.next_time}</span></div>
                         </div>
+                        <div class="mt-3 text-[11px] text-slate-500 text-center border-t border-slate-800/80 pt-2">Ustiga bosing: Real-time loglarni ko'rish</div>
                     </div>`;
                     container.innerHTML += card;
                 });
@@ -72,17 +81,33 @@
             }
         }
 
-        function openModal(username, time, currency) {
-            document.getElementById('modalTitleinnerHTML').innerText = `@${username} (${currency}) - You Claimed!`;
-            document.getElementById('modalTime').innerText = `Next Claim: ${time}`;
-            document.getElementById('claimModal').classList.remove('hidden');
-            document.getElementById('claimModal').classList.add('flex');
+        async function fetchLogs() {
+            if (!currentCurrency || !currentFolder) return;
+            try {
+                let res = await fetch(`data.php?log=1&currency=${currentCurrency}&folder=${currentFolder}`);
+                let data = await res.json();
+                document.getElementById('logContent').innerText = data.log || "Log ma'lumotlari bo'sh.";
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function openModal(currency, folder, username) {
+            currentCurrency = currency;
+            currentFolder = folder;
+            document.getElementById('modalTitle').innerText = `[${currency} / ${folder}] - @${username}`;
+            document.getElementById('logModal').classList.remove('hidden');
+            document.getElementById('logModal').classList.add('flex');
+            
+            fetchLogs();
+            // Har 3 sekundda loglarni avtomatik yangilab turish (Real-time)
+            logInterval = setInterval(fetchLogs, 3000);
         }
 
         function closeModal() {
-            document.getElementById('folderModal').classList.add('hidden'); // xatolikni oldini olish uchun
-            document.getElementById('claimModal').classList.add('hidden');
-            document.getElementById('claimModal').classList.remove('flex');
+            clearInterval(logInterval);
+            document.getElementById('logModal').classList.add('hidden');
+            document.getElementById('logModal').classList.remove('flex');
         }
 
         fetchAccounts();

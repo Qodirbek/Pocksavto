@@ -1,9 +1,0 @@
-{
-    "user_agent": "Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36",
-    "wallet": "UQCqttk9IC-vceUkwNjERyf417ml83Ia88gWWKm6_4hfUPvi",
-    "min_withdraw": "0.1",
-    "auto_withdraw": "1",
-    "type": "2",
-    "xevil_apikey": "mJ9aV6UuiEyp21B7tRzHaFuzD5OyXN6I",
-    "cookie": "fp=tm833fJWqiCvb6dl; g_state={\"i_l\":0,\"i_ll\":1791645564959,\"i_b\":\"lXSUvFQ8L4FulA7ULdd4wduViN+vF9V8thoK9VS5w0k\",\"i_e\":{\"enable_itp_optimization\":24},\"i_et\":1791645564959}; remember_token=c23003de309a966f1ba788a7a8281bd6; adbit_session=ovrup0ogsiopgtamltafpt2gdacpm8v9; csrf_cookie_name=d0930eae6d8ad97fc310cf90af7c6f7e"
-}
